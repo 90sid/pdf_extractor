@@ -1,0 +1,106 @@
+{
+  "template_name": "republic",
+  "doc_fields": [
+    {
+      "name": "File Name",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "hauler_name",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "account_number",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "invoice_number",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "invoice_date",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "total_amount_due",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "payment_due_date",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "service_address",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "main_description",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "line_item_fields": [
+    {
+      "name": "File Name",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "quantity",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "unit_price",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "line_total",
+      "type": "number",
+      "required": true
+    }
+  ],
+  "has_line_items": true,
+  "normalization": {
+    "date_formats": [
+      "%d/%m/%Y",
+      "%d-%m-%Y",
+      "%Y-%m-%d"
+    ],
+    "currency_symbols": [
+      "₹",
+      "$",
+      "INR",
+      "USD"
+    ]
+  },
+  "validation_rules": [
+    "If totals exist: total ~= subtotal + tax",
+    "If line items exist: total ~= sum(line_items.amount)"
+  ],
+  "created_at": "2026-02-09T05:52:08.704116Z",
+  "instructions": "Extraction Instructions:\n\nFile Name: Set to the input file name being processed.\n\nhauler_name: Extract the company name at the top of the first page (e.g., “Republic Services”). Look for prominent branding or web/email addresses indicating the hauler.\n\naccount_number: Anchor on \"Account Number\", \"Acct #\", etc. Extract the value found directly below or to the right. Normalize by stripping spaces.\n\ninvoice_number: Anchor on \"Invoice Number\", \"Invoice No\", or \"Invoice #\". Take the adjacent or next line text; remove spaces.\n\ninvoice_date: Anchor on \"Invoice Date\" or similar. Extract nearby date; normalize to YYYY-MM-DD (e.g., \"March 31, 2024\" → \"2024-03-31\").\n\ntotal_amount_due: Anchor on \"Total Amount Due\", “Amount Due”. Take adjacent or following number; remove $ and commas; convert to float.\n\npayment_due_date: Anchor on \"Payment Due Date\", \"Due Date\". Take the adjacent or following value (may be a date or status like \"Past Due\").\n\nservice_address: Extract main address under or near company name or in line item block—look for patterns like “[Business Name] [Street Address], [City] [State] [ZIP]”. Choose the address associated with the relevant services, e.g., “Applebees 6315 S Interstate 35, Austin TX 78719”.\n\nmain_description: From line item/service section, extract the primary service description line, typically listing containers/types/lifts (e.g., “1 Waste Container 8 Cu Yd, 1 Lift Per Week”).\n\nNormalization Rules:\n- All numbers: remove $, commas.\n- Dates: convert all to ISO format YYYY-MM-DD, using best guess if partial (default to 1st of month if only MM/YYYY).\n- Strings: strip leading/trailing whitespace.\n\nLine Item Extraction:\n\n1. Identify the section between the “CURRENT INVOICE CHARGES” header and before any “Total” or summary lines. Anchor to tabular regions using headers: \"Description\", \"Reference\", \"Quantity\", \"Unit Price\", \"Amount\".\n\n2. For each line:\n    - quantity: Extract from the \"Quantity\" column (may be blank; if so, set to NaN).\n    - unit_price: Extract from the \"Unit Price\" column; remove $, commas; convert to float (set NaN if missing).\n    - line_total: Extract from the \"Amount\" or \"Line Total\" column; remove $, commas; convert to float (set NaN if missing).\n    - File Name: Set to the input file name for each row.\n\n3. Keep blank/NaN fields as needed to match input (e.g., for subtotal or header rows).\n\n4. Maintain the order of line items as in the PDF.\n\nGeneral:\n- If any field is missing, leave blank (\"\" for strings, NaN for numeric).\n- Ignore repeated fields; use the first occurrence unless indicated otherwise by context.\n- Do not extract handwritten or stamped values. Use only printed/OCR text.",
+  "output_columns": [
+    "File Name",
+    "hauler_name",
+    "account_number",
+    "invoice_number",
+    "invoice_date",
+    "total_amount_due",
+    "payment_due_date",
+    "service_address",
+    "main_description",
+    "quantity",
+    "unit_price",
+    "line_total"
+  ]
+}

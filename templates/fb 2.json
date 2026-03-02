@@ -1,0 +1,124 @@
+{
+  "template_name": "fb 2",
+  "doc_fields": [
+    {
+      "name": "File Name",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "hauler_name",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "billing_date",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "invoice_number",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "customer_number",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "bill_to",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "service_address",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "total_due_balance",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "due_date",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "line_service_address",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "line_item_fields": [
+    {
+      "name": "File Name",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "line_date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "name": "line_description",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "quantity",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "rate",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "line_total",
+      "type": "number",
+      "required": true
+    }
+  ],
+  "has_line_items": true,
+  "normalization": {
+    "date_formats": [
+      "%d/%m/%Y",
+      "%d-%m-%Y",
+      "%Y-%m-%d"
+    ],
+    "currency_symbols": [
+      "₹",
+      "$",
+      "INR",
+      "USD"
+    ]
+  },
+  "validation_rules": [
+    "If totals exist: total ~= subtotal + tax",
+    "If line items exist: total ~= sum(line_items.amount)"
+  ],
+  "created_at": "2026-02-25T05:53:28.082541Z",
+  "instructions": "Extraction Template Instructions for Flood Brothers Invoice PDFs\n\nGeneral:\n- Remove duplicate/summary pages and process only the first occurrence of all header fields.\n- Normalize all dates to YYYY-MM-DD.\n- Remove commas, currency symbols, and whitespace padding from number fields.\n- Remove extra linebreaks within address fields; keep single linebreaks between address parts.\n\nField Extraction:\n\nFile Name:\n- Set to the input PDF file name.\n\nhauler_name:\n- Extract text near top of the first page matching \"FLOOD BROTHERS DISPOSAL\" (with or without \"& RECYCLING SERVICES\").\n- Take the first occurrence.\n\nbilling_date:\n- Anchor to label: \"BILLING DATE:\", \"BILL DATE:\", \"DATE:\", \"Billing Date:\"\n- Extract date string immediately after the label.\n- Normalize.\n\ninvoice_number:\n- Anchor to label: \"INVOICE NO:\", \"Invoice No\", \"Invoice #\"\n- Extract the number after the label.\n\ncustomer_number:\n- Anchor to label: \"CUSTOMER NO:\", \"Account No\", \"Account Number\", \"Customer Number\"\n- Extract immediately following value.\n\nbill_to:\n- Anchor to \"BILL TO:\" (address block follows on subsequent lines).\n- Capture all contiguous lines until next known field or blank line.\n- Normalize as multi-line string.\n\nservice_address:\n- Anchor to \"SERVICE ADDRESS:\" (address block follows on subsequent lines).\n- Capture all contiguous lines until next known field or blank line.\n- Normalize as multi-line string.\n\ntotal_due_balance:\n- Anchor to \"TOTAL BALANCE DUE\", \"BALANCE DUE\", or \"TOTAL DUE\"\n- If balance printed over multiple lines, use the numeric value directly underneath/beside those labels.\n- Remove any non-numeric characters (commas, currency).\n- Use the first matching occurrence.\n\ndue_date:\n- Anchor to \"DATE DUE:\", \"Due Date\", \"DUE DATE\"\n- Extract date string immediately after label.\n- Normalize.\n\nline_service_address:\n- In line item sections, look for \"SUB ACCT\" lines and capture next address line matching \"{number} VINCENNES RD\" as service address for following line items.\n- For main header, extract address line under SERVICE ADDRESS that matches pattern \"{number} VINCENNES RD\" (this is the line_service_address).\n\nLine Item Extraction:\n\nLocate the table region(s) by presence of these recurring headers (or in repeated blocks):\n- Look for rows with fields: \"DATE\", \"DESCRIPTION\", \"QUANTITY\", \"RATE\", \"TOTAL\".\n\nFor each line item:\n- If within a \"SUB ACCT\" or block with a recognized address, assign that service address until the next address is found.\n- \"line_date\": Extract date at start of an item block; if only in MM/DD/YY, convert to YYYY-MM-DD.\n- \"line_description\": Extract item description, typically first text line after date, stopping before numeric columns.\n- \"quantity\": Extract first number after description.\n- \"rate\": Extract if present (if missing, set as empty).\n- \"line_total\": Extract numeric value after quantity/rate columns (ignore lines labeled \"Sub Total\", \"Total\", use only for actual item lines).\n- Assign \"File Name\" to each line item.\n\nNormalization:\n- Dates: Convert all to \"YYYY-MM-DD\".\n- Numbers: Remove commas and currency symbols; parse as number.\n- For blank or missing fields, set as empty string per schema.\n\nNotes:\n- Only extract the first logical page's header fields (ignore repeats caused by copy pages).\n- Assign only the first \"line_service_address\" that appears under SERVICE ADDRESS in the header block for the document (not per line).\n- For line items, if repeated across multiple sub-accounts, treat each sub-account/address block as a new item/group.\n- Exclude summary/total/account aging lines; include only actual service line items.",
+  "output_columns": [
+    "File Name",
+    "hauler_name",
+    "billing_date",
+    "invoice_number",
+    "customer_number",
+    "bill_to",
+    "service_address",
+    "total_due_balance",
+    "due_date",
+    "line_date",
+    "line_service_address",
+    "line_description",
+    "quantity",
+    "rate",
+    "line_total"
+  ]
+}

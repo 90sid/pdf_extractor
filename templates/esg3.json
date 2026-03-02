@@ -1,0 +1,173 @@
+{
+  "template_name": "esg3",
+  "doc_fields": [
+    {
+      "name": "Utility Name",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Account Number",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Meter Number",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Tariff",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Month",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Service from",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Service to",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Duration (Days)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Electric Energy -  Off Peak (kWh)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Electric Energy - Intermediate Peak (kWh)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Electric Energy - On Peak (kWh)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Total (kWh)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Demand -  Off Peak (kW)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Demand - Intermediate Peak (kW)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Demand - On Peak (kW)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Total Metered (kW)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Demand - Total Billed (kW)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Demand - kVA",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Supply Charges($)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Product",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Description",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Charges",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "amount",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "file_name",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "line_item_fields": null,
+  "has_line_items": false,
+  "normalization": {
+    "date_formats": [
+      "%d/%m/%Y",
+      "%d-%m-%Y",
+      "%Y-%m-%d"
+    ],
+    "currency_symbols": [
+      "₹",
+      "$",
+      "INR",
+      "USD"
+    ]
+  },
+  "validation_rules": [
+    "If totals exist: total ~= subtotal + tax",
+    "If line items exist: total ~= sum(line_items.amount)"
+  ],
+  "created_at": "2026-02-05T08:41:01.755583Z",
+  "instructions": "Extraction Template Instructions:\n\n1. Utility Name:  \n   - Anchor on company branding/header or labels like \"make your check payable to\", \"Remit Payment To\".\n   - Normalize spacing, capture the name as it appears.\n\n2. Account Number:  \n   - Search for labels (\"Account Number:\", \"Acct #\", \"Account No\", \"Acct Number\") and extract the value immediately after or beneath.\n   - Normalize by removing spaces if consistent with display.\n\n3. Meter Number:  \n   - Anchor on \"Meter Number\", \"Meter #\", or table columns under \"Meter\".\n   - Accept 6-12 digit numbers near usage/history tables.\n   - Normalize as a string.\n\n4. Tariff:  \n   - Look for \"Tariff\", \"Rate\", \"Distribution Rate\", or \"DISTRIBUTION RATE\".\n   - Extract the numeric code following the label and normalize to string/number.\n\n5. Month:  \n   - Extract from text near report title/header.\n   - If not explicit, return as NaN/null.\n\n6. Service from / Service to:  \n   - Find date ranges near \"Service from\", \"For service\", \"Billing Period\".\n   - Extract the two dates, normalize to MM/DD/YY or MM/DD/YYYY.\n\n7. Duration (Days):  \n   - Anchor on \"Days\", \"Duration\".\n   - Extract numeric value adjacent or within same line; if missing, return NaN.\n\n8. Electric Energy (kWh) (Off/Intermediate/On Peak)/Total (kWh):  \n   - Locate energy summary or usage breakdown—look for table headers and rows including \"kWh\", \"Off Peak\", \"On Peak\", \"Intermediate\".\n   - Extract numeric values by column; if not found, return NaN.\n   - Remove commas.\n\n9. Demand (kW) (Off/Intermediate/On Peak)/Total Metered/Demand - Total Billed/Demand - kVA:  \n   - Look for \"Demand\" sections within tables or line items, anchored by \"kW\" or \"kVA\".\n   - Map corresponding values by peak descriptor.\n   - Return NaN if not found.\n\n10. Supply Charges($):  \n    - Anchor on \"Supply\", \"Supply Charges\", \"Current Charges for Electricity\".\n    - Extract value showing dollar amount; remove commas, retain or remove currency symbol as needed.\n\n11. Product, Description, Charges, amount:  \n    - For each charge/line item within billing breakdowns:\n        - Product: the line item name (e.g., \"Transmission Dmd Chrg\").\n        - Description: calculation/formula description next to product.\n        - Charges: extract corresponding column or total if present.\n        - amount: extract dollar value for the item, normalize by removing commas; retain \"$\".\n\n12. file_name:  \n    - Set as the document's file name.\n\nNormalization:\n- Dates: Convert all to MM/DD/YY or MM/DD/YYYY format.\n- Numbers: Remove commas, leading/trailing spaces.\n- Dollar amounts: Remove commas; retain \"$\" if present, or add if output format requires.\n- Empty/Unavailable fields: Return as NaN or null.\n\nLine Items:\n- No line items extraction required unless schema updated.\n\nTable Detection (if needed):\n- Detect tables by consecutive rows/columns aligned under labeled headers (e.g., \"Product\", \"Description\", \"Amount\", \"Charges\").\n- Map columns based on nearest header caption.\n\nGeneral:\n- Always anchor extraction to labels or their close proximity.\n- Use regular expressions for dates (\\d{1,2}/\\d{1,2}/\\d{2,4}), amounts (\\$?\\d{1,3}(,\\d{3})*(\\.\\d{2})?), and large numbers.\n- Return a single record per document.",
+  "output_columns": [
+    "source_file",
+    "Utility Name",
+    "Account Number",
+    "Meter Number",
+    "Tariff",
+    "Month",
+    "Service from",
+    "Service to",
+    "Duration (Days)",
+    "Electric Energy -  Off Peak (kWh)",
+    "Electric Energy - Intermediate Peak (kWh)",
+    "Electric Energy - On Peak (kWh)",
+    "Total (kWh)",
+    "Demand -  Off Peak (kW)",
+    "Demand - Intermediate Peak (kW)",
+    "Demand - On Peak (kW)",
+    "Total Metered (kW)",
+    "Demand - Total Billed (kW)",
+    "Demand - kVA",
+    "Supply Charges($)",
+    "Product",
+    "Description",
+    "Charges",
+    "amount",
+    "file_name"
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "template_name": "cdi",
+  "doc_fields": [
+    {
+      "name": "Vendor",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Invoice/Receipt Number",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "Transaction/Invoice Date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "name": "Invoice/Receipt Subtotal",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "Tax",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Invoice/Receive Total",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "Service Location",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Shipping Address",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Billing Address",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Handwritten Note(s)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Document Name",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Page Number",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "Bates Number",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "line_item_fields": [
+    {
+      "name": "Item Description",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Item Amount",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "Job Name (or \"Lamex PO\" on some receipts)",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "has_line_items": true,
+  "normalization": {
+    "date_formats": [
+      "%d/%m/%Y",
+      "%d-%m-%Y",
+      "%Y-%m-%d"
+    ],
+    "currency_symbols": [
+      "₹",
+      "$",
+      "INR",
+      "USD"
+    ]
+  },
+  "validation_rules": [
+    "If totals exist: total ~= subtotal + tax",
+    "If line items exist: total ~= sum(line_items.amount)"
+  ],
+  "created_at": "2026-02-11T04:56:54.833874Z",
+  "instructions": "Extraction Template Instructions:\n\n1. Vendor: Extract the text at the very top of the first page, above or near the address block; look for law firm or company names.\n2. Invoice/Receipt Number: Anchor on labels like \"Inv#\", \"Invoice#\", \"Invoice No\", \"Invoice #\", or \"Bill No\" and extract the adjacent number.\n3. Transaction/Invoice Date: Anchor on dates next to \"Date\", \"Invoice Date\", or floating dates at the top near vendor/company or invoice details. Normalize to YYYY-MM-DD.\n4. Invoice/Receipt Subtotal: Find \"Subtotal\", \"Total Fee & Disbursements\", or \"Totals\" near the bottom summary table. Extract the numeric value; ignore \"Previous Balance\" or \"Payments\". Remove currency formatting.\n5. Tax: Find \"Tax\" labels near the summary area. If missing or not applicable, set as NaN.\n6. Invoice/Receive Total: Anchor on \"Total\", \"Balance Now Due\", or the bottom-most grand total. Extract the numeric value; remove currency symbols/commas.\n7. Service Location: Extract value next to \"Service Location:\" or similar; if label absent, set NaN.\n8. Shipping Address: Extract value next to \"Shipping Address:\" or similar; if label absent, set NaN.\n9. Billing Address: Anchor on \"Billing Address:\" or block directly underneath customer/company info (often below client name and before attention/file info); extract full multiline address.\n10. Handwritten Note(s): Look for non-printed, non-typed annotations, often with visual clues (italic, script, or distinct from main text). If not present, set NaN.\n11. Document Name: Use the file name of the PDF.\n12. Page Number: Extract from \"Page\", \"Pg.\", or similar label or bottom margin. Remove extra text; parse as integer.\n13. Bates Number: Extract from alphanumeric code with format like \"CDII_000213\" (often in header/footer or margin).\nLine Items Extraction:\n\n- Table starts at headers like \"DATE\", \"DESCRIPTION\", \"HOURS\", \"AMOUNT\", \"LAWYER\", or similar; rows are separated by whitespace.\n- For each line, extract:\n  - Item Description: Text between \"DATE\"/date (or empty cell) and \"HOURS\"/\"AMOUNT\".\n  - Item Amount: Number under \"AMOUNT\" column for corresponding row; normalize decimals. Remove commas, currency symbols.\n  - Job Name (or \"Lamex PO\"): If present, extract from column or field labeled \"Job Name\", \"PO\", or \"Lamex PO\"—otherwise set as NaN.\n- Handle multi-line descriptions by merging adjacent lines between date/blank and amount columns until next date or line item starts.\nNormalization:\n\n- All dates: Parse to YYYY-MM-DD.\n- Numbers/currency: Remove \"$\", \",\", \"USD\" etc; parse as float.\n- If value is missing or not found, return NaN.\n\nApply these rules for every similar invoice or receipt PDF to ensure consistent field and line item extraction.",
+  "output_columns": [
+    "Vendor",
+    "Invoice/Receipt Number",
+    "Transaction/Invoice Date",
+    "Item Description",
+    "Item Amount",
+    "Invoice/Receipt Subtotal",
+    "Tax\tInvoice/Receive Total",
+    "Job Name (or \"Lamex PO\" on some receipts)",
+    "Service Location",
+    "Shipping Address",
+    "Billing Address",
+    "Handwritten Note(s)",
+    "Document Name",
+    "Page Number",
+    "Bates Number"
+  ]
+}

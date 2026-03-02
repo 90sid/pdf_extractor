@@ -1,0 +1,125 @@
+{
+  "template_name": "cditest7861",
+  "doc_fields": [
+    {
+      "name": "Vendor",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Invoice/Receipt Number",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Transaction/Invoice Date",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Invoice/Receipt Subtotal",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Tax",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Invoice/Receive Total",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Service Location",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Shipping Address",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Billing Address",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Handwritten Note(s)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Document Name",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Page Number",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Bates Number",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "line_item_fields": [
+    {
+      "name": "Item Description",
+      "type": "string",
+      "required": false
+    },
+    {
+      "name": "Item Amount",
+      "type": "string",
+      "required": false
+    },
+    {
+      "name": "Job Name (or \"Lamex PO\" on some receipts)",
+      "type": "string",
+      "required": false
+    }
+  ],
+  "has_line_items": true,
+  "normalization": {
+    "date_formats": [
+      "%d/%m/%Y",
+      "%d-%m-%Y",
+      "%Y-%m-%d"
+    ],
+    "currency_symbols": [
+      "₹",
+      "$",
+      "INR",
+      "USD"
+    ]
+  },
+  "validation_rules": [
+    "If totals exist: total ~= subtotal + tax",
+    "If line items exist: total ~= sum(line_items.amount)"
+  ],
+  "created_at": "2026-02-13T07:53:14.264459Z",
+  "instructions": "Extraction Instructions:\n\nVendor: \n- Anchor to business name at top center or top left of the first page. Typical patterns: all-uppercase, bold, largest text. If not clear, use sender label (\"From\", \"Vendor\", \"Remit To\").\nInvoice/Receipt Number: \n- Anchor to labels: \"Invoice No\", \"Invoice #\", \"Receipt No\", \"Bill No\". Accept nearby or following value (alphanumeric). If unlabeled and only one large number near top, use that.\nTransaction/Invoice Date: \n- Anchor to labels: \"Date\", \"Invoice Date\", \"Transaction Date\", \"Issued\". Prefer date nearest to invoice number/location. Normalize to YYYY-MM-DD.\nInvoice/Receipt Subtotal: \n- Anchor to \"Subtotal\" label, picking value directly to its right or below. Remove currency symbols and commas. If omitted, leave blank.\nTax: \n- Anchor to \"Tax\", \"Sales Tax\", \"VAT\" labels. Select nearby numerical value. Remove currency symbols and commas. If omitted, leave blank.\nInvoice/Receive Total: \n- Anchor to \"Total\", \"Amount Due\", \"Invoice Total\", \"Payment Due\" (ignore “Subtotal”). Use last or largest total amount in summary section. Remove currency symbols and commas.\nService Location: \n- Look for \"Service Location\". If present, extract following text or address. Otherwise, leave blank.\nShipping Address: \n- Anchor to \"Ship To\", \"Shipping Address\". Extract following lines until next whitespace or label. If omitted, leave blank.\nBilling Address: \n- Anchor to \"Bill To\", \"Billing Address\". Extract following lines until next whitespace or label. If omitted, leave blank.\nHandwritten Note(s): \n- Detect non-printed/handwritten script regions or OCR artifact recognized as handwriting. If none, leave blank.\nDocument Name: \n- Use file name of current document, including extension (e.g., \"CDII_007861.pdf\").\nPage Number: \n- Use printed or logical page number. If not printed, use page sequence (e.g., 1 for first PDF page).\nBates Number: \n- Anchor to string/number at top/bottom corners labeled \"Bates\" or matching known format (e.g., segment like \"CDII_007861\" at page edge). Otherwise, use file-stamped identifier.\n\nLine Items Table Extraction:\n- Identify table below header or summary block, often spanning columns with consistent spacing, or located in the main body.\n- Detect columns by anchored headers: use \"Description\", \"Item\", \"Detail\", \"Item Description\" for Item Description; \"Amount\", \"$\", \"Charge\", \"Item Amount\" for Item Amount; \"Job Name\", \"PO\", \"Lamex PO\" for Job Name.\n- Extract each row: map columns to fields as above. Clean numbers (remove commas/currency signs), pass blanks if fields missing.\n- Stop extraction when row pattern breaks or a summary/total appears.",
+  "output_columns": [
+    "Vendor",
+    "Invoice/Receipt Number",
+    "Transaction/Invoice Date",
+    "Item Description",
+    "Item Amount",
+    "Invoice/Receipt Subtotal",
+    "Tax",
+    "Invoice/Receive Total",
+    "Job Name (or \"Lamex PO\" on some receipts)",
+    "Service Location",
+    "Shipping Address",
+    "Billing Address",
+    "Handwritten Note(s)",
+    "Document Name",
+    "Page Number",
+    "Bates Number"
+  ]
+}

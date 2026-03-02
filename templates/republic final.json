@@ -1,0 +1,40 @@
+{
+  "template_name": "republic final",
+  "doc_fields": [
+    { "name": "Service Address", "type": "string", "required": true },
+    { "name": "Account Number", "type": "string", "required": true },
+    { "name": "Invoice Number", "type": "string", "required": true },
+    { "name": "Invoice Date", "type": "string", "required": true },
+    { "name": "Due Date", "type": "string", "required": true },
+
+    { "name": "Invoice Total", "type": "number", "required": false }
+  ],
+  "line_item_fields": [
+    { "name": "Description", "type": "string", "required": true },
+    { "name": "Quantity", "type": "string", "required": false },
+    { "name": "Unit Price", "type": "number", "required": false },
+    { "name": "Amount", "type": "number", "required": false }
+  ],
+  "has_line_items": true,
+  "normalization": {
+    "date_formats": ["%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d"],
+    "currency_symbols": ["₹", "$", "INR", "USD"]
+  },
+  "validation_rules": [
+    "If Invoice Total exists: Invoice Total ~= sum(line_items.Amount) when rows represent priced services",
+    "Line item Amount should not equal invoice total for all rows"
+  ],
+  "created_at": "2026-02-09T10:20:49.066779Z",
+  "instructions": "Extraction Template Instructions\n\nHEADER FIELDS (one per invoice)\n\n1. Account Number\n- Anchor on: \"Account Number\", \"Acct #\", \"Acct Number\".\n- Extract the value immediately right of or below the label.\n\n2. Invoice Number\n- Anchor on: \"Invoice Number\", \"Invoice No\", \"Invoice #\", \"Bill No\".\n- Extract the value immediately right of or below the label.\n\n3. Invoice Date\n- Anchor on: \"Invoice Date\", \"Date of Invoice\".\n- Normalize to MM/DD/YY when possible.\n\n4. Due Date\n- Anchor on: \"Due Date\", \"Payment Due Date\", \"Payment Due\".\n- IMPORTANT: If it says \"Do Not Pay\", return exactly \"Do Not Pay\".\n- Otherwise normalize to MM/DD/YY.\n\n5. Service Address\n- Extract the service/site/store address (not remittance/PO box).\n- Prefer the address associated with each service block; if multiple sites exist, for merged output repeat the site/service address for that block.\n\n6. Invoice Total (optional)\n- Anchor on: \"Current Invoice Charges\" or invoice total summary.\n- Extract the numeric invoice total.\n\nLINE ITEMS (MUST extract ALL rows)\n\nA. Detect line item region\n- Start under heading: \"CURRENT INVOICE CHARGES\".\n- There may be multiple site blocks. For each site block, extract all rows until the next site block or totals.\n\nB. Description\n- Extract the full service/charge description text for each row.\n\nC. Quantity\n- If quantity is present for that row, extract it; else blank.\n\nD. Unit Price\n- Extract the unit price from the row (right side columns).\n\nE. Amount (MUST)\n- Amount must come from the SAME ROW's rightmost \"Amount\" column.\n- DO NOT use \"Current Invoice Charges\" / invoice total / total due as the line item Amount.\n- If Amount is blank but Unit Price exists, set Amount = Unit Price.\n- Include negative adjustments if they appear as line items.\n\nNormalization\n- Remove $ and commas for numbers.\n- If value missing, return empty string (not NaN).",
+  "output_columns": [
+    "Service Address",
+    "Account Number",
+    "Invoice Number",
+    "Invoice Date",
+    "Due Date",
+    "Description",
+    "Quantity",
+    "Unit Price",
+    "Amount"
+  ]
+}

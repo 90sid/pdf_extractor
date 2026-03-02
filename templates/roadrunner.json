@@ -1,0 +1,136 @@
+{
+  "template_name": "roadrunner",
+  "doc_fields": [
+    {
+      "name": "File Name",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "hauler_name",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "invoice_number",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "amount",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "account_number",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "bill_date",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "due_date",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "bill_address",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "account_name",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "site_address",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "site_id",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "line_date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "name": "line_description",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "wo_number",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "po_number",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "quantity",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "unit_rate",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "line_total",
+      "type": "number",
+      "required": true
+    }
+  ],
+  "line_item_fields": [],
+  "has_line_items": false,
+  "normalization": {
+    "date_formats": [
+      "%d/%m/%Y",
+      "%d-%m-%Y",
+      "%Y-%m-%d"
+    ],
+    "currency_symbols": [
+      "₹",
+      "$",
+      "INR",
+      "USD"
+    ]
+  },
+  "validation_rules": [
+    "If totals exist: total ~= subtotal + tax",
+    "If line items exist: total ~= sum(line_items.amount)"
+  ],
+  "created_at": "2026-02-05T08:19:19.760003Z",
+  "instructions": "Extraction Instructions:\n\nFile Name:\n- Use the source file name.\n\nhauler_name:\n- Anchor on company name header, e.g. lines containing \"FRONTIER WASTE\". Take full text in uppercase prior to the remittance address block.\n\ninvoice_number:\n- Anchor on \"INVOICE #\", \"Invoice #\", \"Invoice No\", or \"Invoice Number\". Extract the numeric value immediately following.\n\namount:\n- Anchor on labels: \"AMOUNT\", \"INVOICE TOTAL\", or \"Total Due\" (choose the first such line at the top of the document, not in line items/tables).\n- Extract the numeric value; normalization: remove currency symbols and commas.\n\naccount_number:\n- Anchor on \"ACCOUNT #\", \"Account No\", or \"Account Number\". Extract the numeric value following label.\n\nbill_date:\n- Anchor on top-of-document \"DATE\" or \"Bill Date\" labels.\n- Prefer \"DATE\" found near invoice/account details (not table headers).\n- Extract value and normalize as YYYY-MM-DD.\n\ndue_date:\n- Anchor on \"Due Date\", \"DUE UPON RECEIPT\", or similar.\n- If \"Due Upon Receipt\" appears, set to null/NaN.\n- Else, extract and normalize as YYYY-MM-DD.\n\nbill_address:\n- Extract address block beneath the hauler name, ending before customer (account_name) info. Include PO boxes and city/state/ZIP.\n\naccount_name:\n- Anchor on unique customer/company name below main \"AMOUNT\"/\"ACCOUNT #\" area (e.g. \"ROADRUNNER RECYCLING\").\n- Use full line; ignore address content.\n\nsite_address:\n- In the first site block, anchor on lines like \"Site [site_id] - [name] - [address]\". Extract the address segment immediately after site name and dash.\n\nsite_id:\n- In the first site block, extract the number after \"Site\" and before dash (e.g. in \"Site 209284001 - TEXAS EXCEL - ...\").\n\nline_date:\n- In the first line-item table of the first site, extract under \"DATE\" column (match MM/DD/YY - MM/DD/YY or MM/DD/YY formats).\n\nline_description:\n- In first site, from table, extract under \"DESCRIPTION\" column for first line with a value.\n\nwo_number:\n- In \"WO #\" column for first row. If blank/missing, output null/NaN.\n\npo_number:\n- In \"PO #\" column for first row. If blank/missing, output null/NaN.\n\nquantity:\n- Extract numeric value under \"QTY\" column of the first row.\n\nunit_rate:\n- Extract numeric value under \"UNIT RATE\" column of the first row; normalization: remove commas and currency symbols.\n\nline_total:\n- Extract numeric value under \"TOTAL\" column of the first row; normalization: remove commas and currency symbols.\n\nNormalization:\n- For all numbers: remove commas, currency symbols.\n- For dates: output all normalized as YYYY-MM-DD when possible. If date range, retain original format (e.g., \"MM/DD/YY - MM/DD/YY\").\n- If value missing/blank, output null/NaN.\n\nTable/Line items:\n- Detect table by header: \"DATE\", \"DESCRIPTION\", \"WO #\", \"PO #\", \"QTY\", \"UNIT RATE\", \"TOTAL\".\n- Map columns by header label; first complete data row is reference for extraction.",
+  "output_columns": [
+    "File Name",
+    "hauler_name",
+    "invoice_number",
+    "amount",
+    "account_number",
+    "bill_date",
+    "due_date",
+    "bill_address",
+    "account_name",
+    "site_address",
+    "site_id",
+    "line_date",
+    "line_description",
+    "wo_number",
+    "po_number",
+    "quantity",
+    "unit_rate",
+    "line_total"
+  ]
+}

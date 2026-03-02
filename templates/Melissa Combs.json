@@ -1,0 +1,124 @@
+{
+  "template_name": "Melissa Combs",
+  "doc_fields": [
+    {
+      "name": "Vendor",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Invoice/Receipt Number",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Transaction/Invoice Date",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Invoice/Receipt Subtotal",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Tax",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Invoice/Receive Total",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Service Location",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Shipping Address",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Billing Address",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Handwritten Note(s)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Document Name",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Page Number",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Bates Number",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "line_item_fields": [
+    {
+      "name": "Item Description",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Item Amount",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Job Name (or \"Lamex PO\" on some receipts)",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "has_line_items": true,
+  "normalization": {
+    "date_formats": [
+      "%d/%m/%Y",
+      "%d-%m-%Y",
+      "%Y-%m-%d"
+    ],
+    "currency_symbols": [
+      "₹",
+      "$",
+      "INR",
+      "USD"
+    ]
+  },
+  "validation_rules": [
+    "If totals exist: total ~= subtotal + tax",
+    "If line items exist: total ~= sum(line_items.amount)"
+  ],
+  "created_at": "2026-02-11T05:37:57.206481Z",
+  "instructions": "Extraction Instructions:\n\n1. Vendor:  \n   - Extract from the sender name or the first distinct name at the document top above major headers.  \n   - If ambiguous, use the value nearest \"From:\" or as the sender in email format.\n\n2. Invoice/Receipt Number:  \n   - Anchor on \"Order #\", \"Invoice #\", \"Receipt #\", \"Order Number\", \"Invoice No\", \"Bill No\".  \n   - Extract the numeric or alphanumeric identifier following these.  \n   - If absent, return NaN.\n\n3. Transaction/Invoice Date:  \n   - Anchor on \"Date\", \"Order Date\", \"Invoice Date\", \"Sent\", or standard date patterns (MM/DD/YYYY, DD/MM/YYYY, YYYY-MM-DD, Month DD, YYYY).  \n   - Select the date nearest label, normalizing to YYYY-MM-DD.  \n   - If absent, return NaN.\n\n4. Invoice/Receipt Subtotal:  \n   - Anchor on \"Subtotal\", \"Sub-total\", or \"Amount before Tax\".  \n   - Extract numeric value, removing all commas, currency symbols, or extraneous characters.  \n   - Normalize as plain decimal (e.g., 2902.64).\n\n5. Tax:  \n   - Anchor on \"Tax\", \"Sales Tax\", \"GST\", or similar.  \n   - Extract the adjacent numeric value.  \n   - Remove commas or currency characters and normalize.  \n   - If not present, return 0.\n\n6. Invoice/Receive Total:  \n   - Anchor on \"Grand Total\", \"Total\", \"Amount Due\", \"Total Amount\", or \"Invoice/Receipt Total\".  \n   - Prefer value that is after \"Subtotal\"/\"Tax\" and closest to page bottom.  \n   - Remove commas/currency characters and normalize.\n\n7. Service Location:  \n   - Anchor on \"Service Location\", \"Job Site\", or \"Work Location\".  \n   - If not present, return NaN.\n\n8. Shipping Address:  \n   - Anchor on \"Shipping Address\", \"Ship To\".  \n   - Extract lines starting beneath/next to label up to an empty line or next major label.  \n   - Concatenate as a single string, replacing line breaks with commas.\n\n9. Billing Address:  \n   - Anchor on \"Billing Address\", \"Bill To\".  \n   - Extract lines beneath/next to label up to an empty line or major label.  \n   - Concatenate as a single string, replacing line breaks with commas.\n\n10. Handwritten Note(s):  \n    - Detect any text not printed (scanned handwriting or markup).  \n    - If none, return NaN.\n\n11. Document Name:  \n    - Use provided filename if available, otherwise from header/footer or as linked to Bates number.\n\n12. Page Number:  \n    - Extract from explicit \"Page X\", numerals in footer/header, or deduced from sequence.  \n    - Use integer, not padded.\n\n13. Bates Number:  \n    - Anchor on any alphanumeric code matching document IDs, typically in header/footer or filename, that reflects pagination or unique ID (e.g., CDII_003366-67).  \n    - Use as single string.\n\nLine Item Table Instructions:\n\n- Table region:  \n  - Detect by locating a section beneath order details with product or service descriptions, quantities, and amounts.  \n  - Use lines where columns parse as \"Description\", \"Item\", \"Qty\", \"Amount\", \"Total\", \"PO\" or similar.\n\n- Line mapping:  \n  - Item Description:  \n    - Text from the product/description column in each row.  \n    - If multiple fields, concatenate as needed.\n  - Item Amount:  \n    - Amount in same row as description, normalize numbers (no commas, currency symbols).\n  - Job Name (\"Lamex PO\"):  \n    - Anchor on column or pattern \"Job\", \"PO\", \"Lamex PO\" or similar; otherwise, return NaN.\n\nNormalization Rules:  \n- For all monetary fields, remove commas and all currency symbols (e.g., \"$2,902.64 USD\" → 2902.64).  \n- Return NaN for missing/empty extracted values (not blank or NULL).  \n- Normalize all dates to YYYY-MM-DD.  \n- Addresses: flatten to a single comma-separated string with no line breaks.",
+  "output_columns": [
+    "Vendor",
+    "Invoice/Receipt Number",
+    "Transaction/Invoice Date",
+    "Item Description",
+    "Item Amount",
+    "Invoice/Receipt Subtotal",
+    "Tax\tInvoice/Receive Total",
+    "Job Name (or \"Lamex PO\" on some receipts)",
+    "Service Location",
+    "Shipping Address",
+    "Billing Address",
+    "Handwritten Note(s)",
+    "Document Name",
+    "Page Number",
+    "Bates Number"
+  ]
+}

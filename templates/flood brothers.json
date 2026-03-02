@@ -1,0 +1,107 @@
+{
+  "template_name": "flood brothers",
+  "doc_fields": [
+    {
+      "name": "TOTAL",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "table_source",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Customer_No",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Billing_Date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "name": "Due_Date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "name": "Invoice_No",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "Bill_To",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Service_Address",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Hauler_Name",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "line_item_fields": [
+    {
+      "name": "DATE",
+      "type": "date",
+      "required": false
+    },
+    {
+      "name": "DESCRIPTION",
+      "type": "string",
+      "required": false
+    },
+    {
+      "name": "QUANTITY",
+      "type": "number",
+      "required": false
+    },
+    {
+      "name": "RATE",
+      "type": "number",
+      "required": false
+    }
+  ],
+  "has_line_items": true,
+  "normalization": {
+    "date_formats": [
+      "%d/%m/%Y",
+      "%d-%m-%Y",
+      "%Y-%m-%d"
+    ],
+    "currency_symbols": [
+      "₹",
+      "$",
+      "INR",
+      "USD"
+    ]
+  },
+  "validation_rules": [
+    "If totals exist: total ~= subtotal + tax",
+    "If line items exist: total ~= sum(line_items.amount)"
+  ],
+  "created_at": "2026-02-25T05:48:02.180897Z",
+  "instructions": "Extraction Instructions:\n\nField Extraction:\n\n- Invoice_No: Locate using label anchoring on \"INVOICE NO\", \"Invoice No:\", \"INVOICE #\", then extract the adjacent or next numerical value. Normalize to integer, strip spaces/commas/leading zeros.\n- Customer_No: Anchor on labels \"CUSTOMER NO.\", \"Customer No\", \"CUSTOMER NO\", and extract nearby string (keep spaces, remove extraneous punctuation).\n- Billing_Date: Locate using labels \"BILLING DATE\", \"Billing Date:\", extract the adjacent date value. Normalize to \"YYYY-MM-DD\" format.\n- Due_Date: Look for \"DATE DUE\", \"Due Date\", extract the adjacent date, normalize to \"YYYY-MM-DD\".\n- TOTAL: For the statement total, anchor on \"TOTAL BALANCE DUE\", \"TOTAL DUE\", \"TOTAL\", or \"INVOICE TOTAL\" (prefer the largest value near bottom/right or payment remittance section). Extract the number, remove currency symbols, commas, spaces.\n- Bill_To: Immediately after \"BILL TO:\", extract multi-line address block until next label or blank line. Parse into address fields; if possible, use an address parser to fill AddressValue fields.\n- Service_Address: After \"SERVICE ADDRESS:\", extract multi-line address block using the same logic as Bill_To, up to next label or blank line. Parse like above.\n- Hauler_Name: Search for all-caps or prominent company block at top and remittance section (e.g., \"FLOOD BROTHERS DISPOSAL / RECYCLING SERVICES\"), capturing newline-separated lines.\n- table_source: Hard-set to \"Table_1\" for first detected table region with line items.\n\nDate/Number Normalization:\n\n- Dates: Convert MM/DD/YY or MM/DD/YYYY to \"YYYY-MM-DD\".\n- Numbers: Remove commas, currency symbols ($), and whitespace. Accept both integers and decimals.\n\nLine Item Extraction:\n\n- Table region detection: Locate the section between the last header row with labels matching \"DATE\", \"DESCRIPTION\", \"QUANTITY\", \"RATE\", \"TOTAL\" and the start of total/summary rows (\"TOTAL\", \"TOTAL BALANCE DUE\", etc.).\n- For each line, map:\n  - DATE: First column or leading MM/DD/YY string. Convert/normalize date.\n  - DESCRIPTION: All following text columns/lines until numbers for QUANTITY/RATE.\n  - QUANTITY: First numeric value after DESCRIPTION, matching decimal/float/integer pattern.\n  - RATE: Next numeric value if present, otherwise leave blank.\n- Handle multi-line DESCRIPTIONS by joining wrapped text between rows.\n- For missing RATE, leave blank (empty string).\n\nGeneral:\n\n- Apply proximity and label order as tiebreak for ambiguous values.\n- If multiple blocks for any field, prefer first full occurrence or most complete nearest the keyword.\n- Strip out extraneous punctuation, whitespace, or artifacts.\n- Ignore page headers/footers and non-relevant values.",
+  "output_columns": [
+    "DATE",
+    "DESCRIPTION",
+    "QUANTITY",
+    "RATE",
+    "TOTAL",
+    "table_source",
+    "Customer_No",
+    "Billing_Date",
+    "Due_Date",
+    "Invoice_No",
+    "Bill_To",
+    "Service_Address",
+    "Hauler_Name"
+  ]
+}

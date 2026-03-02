@@ -1,0 +1,146 @@
+{
+  "template_name": "esg_small1",
+  "doc_fields": [
+    {
+      "name": "Utility Name",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Account Number",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Meter Number",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Tariff",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Month",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Service from",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Service to",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Duration (Days)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Electric Energy -  Off Peak (kWh)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Electric Energy - Intermediate Peak (kWh)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Electric Energy - On Peak (kWh)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Total (kWh)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Demand -  Off Peak (kW)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Demand - Intermediate Peak (kW)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Demand - On Peak (kW)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Total Metered (kW)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Demand - Total Billed (kW)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Demand - kVA",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Supply Charges($)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Product",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Description",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Charges",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "amount",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "file_name",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "line_item_fields": null,
+  "has_line_items": false,
+  "normalization": {
+    "date_formats": [
+      "%d/%m/%Y",
+      "%d-%m-%Y",
+      "%Y-%m-%d"
+    ],
+    "currency_symbols": [
+      "₹",
+      "$",
+      "INR",
+      "USD"
+    ]
+  },
+  "validation_rules": [
+    "If totals exist: total ~= subtotal + tax",
+    "If line items exist: total ~= sum(line_items.amount)"
+  ],
+  "created_at": "2026-02-05T05:16:59.250009Z",
+  "instructions": "Extraction Instructions:\n\n- Utility Name: Extract from document header or remittance address block. Anchor with terms like \"Eversource\", \"Utility\", or address following \"make check payable\". Normalize spacing and case.\n- Account Number: Anchor with any variant (\"Account Number\", \"Acct #\", etc.); value will follow or appear nearby (typically a 10-14 digit grouping). Use the number near payment details or customer block. Take spaces as-is.\n- Meter Number: Find section labeled \"Meter Number\" or \"Meter\". Extract the adjacent numeric value (may be 8-12 digits).\n- Tariff: Look for \"Tariff\", \"Rate\", or \"DISTRIBUTION RATE:\". Normalize to numeric (e.g., \"030\" becomes 30.0).\n- Month: Anchor with \"Month\", \"Billing Month\", or explicit monthly statement; if not present, return as NaN.\n- Service from: Anchor with \"Service from\" and extract the date. Accept patterns like \"MM/DD/YY\" or \"MM/DD/YYYY\" and normalize to \"MM/DD/YY\".\n- Service to: Anchor with \"Service to\" or extract second date in \"Service from [date] - [date]\" strings. Normalize to \"MM/DD/YY\".\n- Duration (Days): Anchor with \"Duration\", \"Days\", or text like \"31 Days\". If not found, return as NaN.\n- Electric Energy - Off Peak (kWh): Search for section/table with electric usage by period. Look for label \"Off Peak (kWh)\" and capture adjacent value. If not found, return NaN.\n- Electric Energy - Intermediate Peak (kWh): As above, anchor to \"Intermediate Peak (kWh)\".\n- Electric Energy - On Peak (kWh): As above, anchor to \"On Peak (kWh)\".\n- Total (kWh): Anchor with \"Total (kWh)\", \"Total Usage\", or sum for the period. If ambiguous, return NaN.\n- Demand - Off Peak (kW): Anchor with \"Off Peak (kW)\" near \"Demand\". If not found, return NaN.\n- Demand - Intermediate Peak (kW): As above, anchor to \"Intermediate Peak (kW)\".\n- Demand - On Peak (kW): As above, anchor to \"On Peak (kW)\".\n- Total Metered (kW): Anchor with \"Total Metered\" or \"Total Demand Use\". If not found, return NaN.\n- Demand - Total Billed (kW): Anchor with \"Total Billed (kW)\". Return NaN if not specified.\n- Demand - kVA: Anchor with \"Demand - kVA\" or \"kVA\". Return NaN if not specified.\n- Supply Charges($): Anchor with \"Supply\", \"Supply Charges\", or lines showing \"Supply\" and a currency amount. Capture value. Remove \"$\" sign when normalizing for numbers, keep for string fields.\n- Product: For line charges, anchor with a recognizable label (such as \"Transmission Dmd Chrg\") in the charges breakdown/table.\n- Description: Extract text adjacent to Product that details calculation (e.g., \"28.20KW X $9.36000\").\n- Charges: Amount in the charges table corresponding to Product/Description. If not present, return NaN.\n- amount: For each detailed charge (line item), anchor on Product row and capture adjacent amount. Use the number/string with or without currency symbol; remove \"$\" and \",\" for numeric field normalization.\n- file_name: Use the current PDF file name.\n\nNormalization:\n- For dates, use \"MM/DD/YY\" format; pad years as needed. Accept \"MM/DD/YYYY\" and reduce to short year if required.\n- For numbers/currency, remove commas and \"$\" for numeric and calculation fields. Store blank or missing/unknown fields as \"NaN\".\n\nIf tables or line item grids exist:\n- Identify start by locating common column headers or charge sections (e.g., \"Product\", \"Description\", \"$\"/\"Amount\"), and end at totals or next section.\n- Map columns left to right based on header positions; for each product/charge row, extract fields as above.\n\nAlways prefer the most prominent/latest value when labels/sections repeat (e.g. the first occurrence of \"Account Number\" near the statement date or customer name). Return missing/empty fields as \"NaN\"."
+}

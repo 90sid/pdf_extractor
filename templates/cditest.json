@@ -1,0 +1,125 @@
+{
+  "template_name": "cditest",
+  "doc_fields": [
+    {
+      "name": "Vendor",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Invoice/Receipt Number",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Transaction/Invoice Date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "name": "Invoice/Receipt Subtotal",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "Tax",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Invoice/Receive Total",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "Service Location",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Shipping Address",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Billing Address",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Handwritten Note(s)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Document Name",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Page Number",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Bates Number",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "line_item_fields": [
+    {
+      "name": "Item Description",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Item Amount",
+      "type": "number",
+      "required": true
+    },
+    {
+      "name": "Job Name (or \"Lamex PO\" on some receipts)",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "has_line_items": true,
+  "normalization": {
+    "date_formats": [
+      "%d/%m/%Y",
+      "%d-%m-%Y",
+      "%Y-%m-%d"
+    ],
+    "currency_symbols": [
+      "₹",
+      "$",
+      "INR",
+      "USD"
+    ]
+  },
+  "validation_rules": [
+    "If totals exist: total ~= subtotal + tax",
+    "If line items exist: total ~= sum(line_items.amount)"
+  ],
+  "created_at": "2026-02-13T07:24:28.213579Z",
+  "instructions": "Extraction Template Instructions:\n\n1. Vendor:\n   - Anchor to store/company name at top or prominent location. Common patterns: uppercase vendor names, “Sold by”, “From”, or branding.\n   - For Lowe's, match lines with “LOWE’S HOME CENTERS, LLC” or similar.\n\n2. Invoice/Receipt Number:\n   - Look for label variants: “Invoice No”, “Receipt #”, “Transaction #”, “Order No”, “Bill No”.\n   - Extract the value directly to the right or below. If missing, set as blank.\n\n3. Transaction/Invoice Date:\n   - Anchor to date near the top, labeled or standalone. Formats may include MM/DD/YY, MM/DD/YYYY, YYYY-MM-DD.\n   - Normalize to YYYY-MM-DD. If year is two digits, prefix with “20”.\n\n4. Invoice/Receipt Subtotal:\n   - Locate labels: “Subtotal”, “Amount Before Tax”, “Merchandise Total”, or first summary amount.\n   - Strip currency symbols ($, etc) and commas. Extract numeric value.\n\n5. Tax:\n   - Anchor to nearby “Tax”, “Sales Tax”, or “VAT”. Extract value as string (can be blank if absent).\n\n6. Invoice/Receive Total:\n   - Locate labels: “Total”, “Grand Total”, “Amount Due”, last summary amount.\n   - Strip currency symbols and commas. Extract numeric value.\n\n7. Service Location, Shipping Address, Billing Address:\n   - Look for labeled blocks: “Service Location”, “Shipping Address”, “Bill To/Billing Address”. Extract block of text immediately following label.\n   - Return blank if not present.\n\n8. Handwritten Note(s):\n   - If field is provided distinctly or labeled “Notes”/“Handwritten”, extract. Otherwise, leave blank.\n\n9. Document Name:\n   - Use PDF filename present at bottom/top or metadata (e.g., \"CDII_004888.pdf\"). If unavailable, leave blank.\n\n10. Page Number:\n    - Look for “Page X of Y”, “Page:”, or similar footer/header indicators.\n\n11. Bates Number:\n    - If present, extract strings in Bates stamp format or labeled “Bates”, often in footer/header.\n\nLine Items Extraction:\n\n- Table Detection: Identify sections with repeating product or service lines, usually a vertical list with item names and prices.\n- Define header or pattern: First column (description), last column (amount/price). Ignore non-line items or promotional listings.\n- Item Description: Capture full product/service text from the line.\n- Item Amount: Extract closest price on each line; strip currency and commas.\n- Job Name/Lamex PO: If a column or text labeled “Job Name”, “Lamex PO”, or similar exists per line, extract value; otherwise, leave blank.\n\nNormalization Rules:\n- Dates: Convert all to YYYY-MM-DD.\n- Numbers/Currency: Remove commas and symbols ($, etc), return as float.\n- String fields: Strip surrounding whitespace.\n\nAlways return blank (\"\") for required fields if target label or value is not present/unreadable.",
+  "output_columns": [
+    "Vendor",
+    "Invoice/Receipt Number",
+    "Transaction/Invoice Date",
+    "Item Description",
+    "Item Amount",
+    "Invoice/Receipt Subtotal",
+    "Tax",
+    "Invoice/Receive Total",
+    "Job Name (or \"Lamex PO\" on some receipts)",
+    "Service Location",
+    "Shipping Address",
+    "Billing Address",
+    "Handwritten Note(s)",
+    "Document Name",
+    "Page Number",
+    "Bates Number"
+  ]
+}

@@ -1,0 +1,174 @@
+{
+  "template_name": "demo1_esg",
+  "doc_fields": [
+    {
+      "name": "Utility Name",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Account Number",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Meter Number",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Tariff",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Month",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Service from",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Service to",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Duration (Days)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Electric Energy -  Off Peak (kWh)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Electric Energy - Intermediate Peak (kWh)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Electric Energy - On Peak (kWh)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Total (kWh)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Demand -  Off Peak (kW)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Demand - Intermediate Peak (kW)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Demand - On Peak (kW)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Total Metered (kW)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Demand - Total Billed (kW)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Demand - kVA",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Supply Charges($)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "file_name",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "line_item_fields": [
+    {
+      "name": "Product",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Description",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "Charges",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "amount",
+      "type": "number",
+      "required": true
+    }
+  ],
+  "has_line_items": true,
+  "normalization": {
+    "date_formats": [
+      "%d/%m/%Y",
+      "%d-%m-%Y",
+      "%Y-%m-%d"
+    ],
+    "currency_symbols": [
+      "₹",
+      "$",
+      "INR",
+      "USD"
+    ]
+  },
+  "validation_rules": [
+    "If totals exist: total ~= subtotal + tax",
+    "If line items exist: total ~= sum(line_items.amount)"
+  ],
+  "created_at": "2026-02-05T04:54:51.131023Z",
+  "instructions": "Extraction instructions:\n\n1. Utility Name:\n   - Anchor on company name/logo at the top or payment address (e.g., “Eversource”).\n   - Extract as exact string.\n\n2. Account Number:\n   - Anchor on “Account Number”, “Acct #”, “Account No”, or similar.\n   - Extract text immediately after; if formatted with spaces, preserve them.\n\n3. Meter Number:\n   - Locate “Meter Number” or “Meter No” label near meter data table.\n   - Extract number appearing alongside or beneath the label.\n\n4. Tariff:\n   - Prefer extracting the numeric code after “DISTRIBUTION RATE:” (e.g., 030).\n\n5. Month:\n   - If a Month label is not present, derive Month from Service to date (month/year).\n\n6. Service from / Service to:\n   - Anchor on “Billing Period” / “Service from/to” and extract both dates.\n\n7. Duration (Days):\n   - Anchor on “Days” near the billing period (e.g., “31 Days”) and extract the number.\n\n8. Electric Energy / Demand values:\n   - Anchor on corresponding labels in usage/demand tables.\n   - If not present, return empty string.\n\n9. Supply Charges($):\n   - Anchor on “Electric Supply Services” / “Supply Charges” and extract the total supply amount.\n\n10. file_name:\n   - Use the source file name.\n\nLINE ITEMS (Product/Description/Charges/amount):\n- These come from the itemized charge sections.\n\nLine items extraction rule (MUST):\nUnder “Delivery Services” and “Electric Supply Services”, extract every charge line in order until you reach “Subtotal Delivery Services” or “Subtotal Supply Services/Charges” or “Total Current Charges”. Do not stop early. Include negative amounts (e.g., -$3.10). One line item per charge row.\n\nNormalization rules:\n- For numeric amounts: remove commas and currency symbols. Output amount as a number (e.g., 263.95, -3.10).\n- Standardize dates to MM/DD/YY.\n- For any field not found, return empty string (not NaN).",
+  "output_columns": [
+    "Utility Name",
+    "Account Number",
+    "Meter Number",
+    "Tariff",
+    "Month",
+    "Service from",
+    "Service to",
+    "Duration (Days)",
+    "Electric Energy -  Off Peak (kWh)",
+    "Electric Energy - Intermediate Peak (kWh)",
+    "Electric Energy - On Peak (kWh)",
+    "Total (kWh)",
+    "Demand -  Off Peak (kW)",
+    "Demand - Intermediate Peak (kW)",
+    "Demand - On Peak (kW)",
+    "Total Metered (kW)",
+    "Demand - Total Billed (kW)",
+    "Demand - kVA",
+    "Supply Charges($)",
+    "file_name",
+    "Product",
+    "Description",
+    "Charges",
+    "amount",
+    "source_file"
+  ]
+}
