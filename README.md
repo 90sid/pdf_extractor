@@ -366,8 +366,7 @@ poppler-utils
 ```
 
 ### Secrets on Streamlit Cloud
-Do not upload `.env`.
-Add these in Streamlit app settings → Secrets:
+
 
 ```toml
 OPENAI_API_KEY="your_key_here"
@@ -397,56 +396,4 @@ OPENAI_MODEL="gpt-4.1"
 4. Add post-process fixes for vendor-specific quirks
 
 ---
-
-## Recommended future improvements
-
-- Add password protection before deployment
-- Add `/tmp` storage for cloud-safe temporary files
-- Add persistent template storage (DB / S3)
-- Add vendor-specific postprocessors
-- Add audit logs / extraction error reports
-- Add structured output schema enforcement
-- Add table-aware OCR for harder scans
-
----
-
-## Troubleshooting
-
-### Template generation fails with Timestamp JSON error
-Cause:
-- Excel date cells loaded as pandas `Timestamp`
-
-Fix:
-- use JSON-safe conversion before `json.dumps()`
-
-### Merged output shows invoice total in every row
-Cause:
-- LLM used invoice total instead of row amount
-
-Fix:
-- template must define line-item amount clearly
-- postprocess recalculates amount from quantity/unit price
-
-### OCR not working on cloud
-Cause:
-- missing system packages
-
-Fix:
-- add `packages.txt` with `tesseract-ocr` and `poppler-utils`
-
----
-
-## Summary
-
-This project is a template-driven PDF extraction system that combines:
-- PDF text extraction
-- OCR fallback
-- LLM-based schema-aware extraction
-- flexible merged/separate outputs
-- editable template layout
-- post-processing for common invoice mistakes
-
-It is designed so that:
-- developers build the extraction framework
-- non-technical users operate it through templates and output layout controls
 

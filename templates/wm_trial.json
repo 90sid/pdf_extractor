@@ -1,0 +1,124 @@
+{
+  "template_name": "wm_trial",
+  "doc_fields": [
+    {
+      "name": "File Name",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "hauler_organization",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "hauler_name",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "customer_id",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "payment_due_date",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "service_period",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "invoice_date",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "invoice_number",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "service_address",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "source_file",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "line_item_fields": [
+    {
+      "name": "File Name",
+      "type": "string",
+      "required": false
+    },
+    {
+      "name": "description",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "date",
+      "type": "string",
+      "required": false
+    },
+    {
+      "name": "ticket",
+      "type": "string",
+      "required": false
+    },
+    {
+      "name": "quantity",
+      "type": "number",
+      "required": false
+    },
+    {
+      "name": "amount",
+      "type": "number",
+      "required": false
+    }
+  ],
+  "has_line_items": true,
+  "normalization": {
+    "date_formats": [
+      "%d/%m/%Y",
+      "%d-%m-%Y",
+      "%Y-%m-%d"
+    ],
+    "currency_symbols": [
+      "₹",
+      "$",
+      "INR",
+      "USD"
+    ]
+  },
+  "validation_rules": [
+    "Sum of line_item.amount should approximately equal Total Current Charges when all rows are included",
+    "ticket is row-level, not document-level"
+  ],
+  "created_at": "2026-03-13T07:22:40.112292Z",
+  "instructions": "Extraction Instructions for WM Invoice PDFs\n\nGeneral rules:\n- Match label variants case-insensitively.\n- Normalize dates to YYYY-MM-DD when possible.\n- Remove currency symbols and commas from numeric values.\n- Use blank \"\" for missing values.\n\nPDF-level fields:\n- File Name: use source file name.\n- hauler_organization: extract WM / Waste Management organization label.\n- hauler_name: extract full hauler entity near remit/remittance details.\n- customer_id: extract from Customer ID label.\n- payment_due_date: extract from 'Your Payment is Due' or 'Total Due by'.\n- service_period: extract from 'Service Period'.\n- invoice_date: extract from 'Invoice Date'.\n- invoice_number: extract from 'Invoice Number'.\n- service_address: extract from 'Details for Service Location'.\n- source_file: use input file name.\n\nLine item extraction (MUST):\n- Detect the line-item table under 'DETAILS OF SERVICE' and 'Details for Service Location'.\n- Use the row headers: Description, Date, Ticket, Quantity, Amount.\n- Extract EVERY row until 'Total Current Charges' or the next section.\n- For each row:\n  - description = text in Description column\n  - date = row date\n  - ticket = value in Ticket column\n  - quantity = value in Quantity column\n  - amount = row line total from Amount column\n- Ticket is row-level. Do not try to extract a single invoice-level ticket.\n- Amount is row-level. Do not use 'Total Due' or 'Total Current Charges' as line-item amount.\n- Keep negative row amounts like (125.07) as negative values.\n- Rows like 'Administrative Charge 8.50' should still be captured as line items, with blank ticket/date/quantity if needed.\n\nNormalization:\n- Trim whitespace.\n- Preserve row-level granularity.\n- Blank values should be ''.",
+  "output_columns": [
+    "File Name",
+    "hauler_organization",
+    "hauler_name",
+    "customer_id",
+    "payment_due_date",
+    "service_period",
+    "invoice_date",
+    "invoice_number",
+    "service_address",
+    "description",
+    "date",
+    "ticket",
+    "quantity",
+    "amount",
+    "source_file"
+  ]
+}
